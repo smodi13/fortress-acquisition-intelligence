@@ -6,7 +6,8 @@ import { OUTREACH_LABEL, STANCE_LABEL, outreachOf } from "@/lib/research/stance"
 import { integrityErrors, normalize } from "@/lib/research/validate";
 import { scoredDefault } from "@/lib/research/summary";
 import { parseCsv } from "@/lib/research/csv";
-import { readSrc } from "./helpers";
+import { SRC, readSrc } from "./helpers";
+import { join } from "node:path";
 
 const good = {
   companyId: "FAI-004",
@@ -177,5 +178,16 @@ describe("ownership characteristics are distinct from stance and seller intent",
       c.id === "FAI-001" ? { ...c, ownership: { ...c.ownership!, sourceUrl: "https://example.org/x" } } : c,
     );
     expect(integrityErrors(bad, ev).some((e) => e.includes("FAI-001"))).toBe(true);
+  });
+});
+
+describe("corrected Executive Brief PDF", () => {
+  it("is the analyst-approved revision (pinned SHA-256)", async () => {
+    const { createHash } = await import("node:crypto");
+    const { readFileSync } = await import("node:fs");
+    const buf = readFileSync(join(SRC, "Acquisition_Pipeline_Executive_Brief.pdf"));
+    expect(createHash("sha256").update(buf).digest("hex")).toBe(
+      "9f414cf5506c3c6e431dbb679091233f2a2593e836408e37d8bc6e9f934fce73",
+    );
   });
 });
