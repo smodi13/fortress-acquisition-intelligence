@@ -2,62 +2,76 @@
 
 > **Independent applicant work sample. Not affiliated with Ridgepeak Partners or Fortress Service Partners. Company data is public and unverified. Financial case is illustrative.**
 
-A read-only acquisition-intelligence site: 30 uncontacted Texas home-services research leads, plus a clearly separate, illustrative transaction model whose logic reproduces the supplied Excel workbook.
+Independent private equity acquisition sourcing, financial underwriting and M&A execution intelligence platform focused on Texas residential services (HVAC, plumbing, electrical).
 
-- No company has been contacted or verified as being for sale. No company financials exist or are shown.
-- The $8.00mm revenue input belongs to an unnamed sample deal, not to any identified company.
-- Investment research, assumptions and judgments come from the supplied packet (`Ridgepeak_Fortress_Research/`, never modified). This repo only implements software.
+Live site: https://fortress-acquisition-intelligence.vercel.app
 
-## Commands
+## Investment research objective
 
-```bash
-npm install
-npm run dev            # syncs downloads, starts Next.js on :3000
-npm run build && npm start
-npm run check          # format, lint, typecheck, unit tests, build, browser e2e
-npm test               # Vitest (unit, parity, LibreOffice differential)
-npm run test:e2e       # Playwright (needs a prior `npm run build`; first time: npx playwright install chromium)
-npm run extract        # regenerate src/data/*.json from the workbook (a test fails if they drift)
-```
+Prepared as a work sample for an Investment Analyst role. The research asks which Texas residential home-services operators merit further qualification for a buy-and-build platform, using only public information, and shows how a team would underwrite and execute such a deal. It is a research-qualification tool, not an offer or investment recommendation.
+
+## What the data is, and is not
+
+- **30 real, publicly identified companies** (`FAI-001` to `FAI-030`) with first-party source links.
+- **No verified private-company financial statements.** Revenue, EBITDA, valuation and asking price are unknown for every company and are never shown or estimated.
+- **No confirmed acquisition opportunities.** No company has been contacted, and none is verified as being for sale. Seller intent is unknown.
+- **The underwriting model is hypothetical.** Its $8.00mm revenue input belongs to an unnamed sample acquisition and is not an estimate for any identified company. Hypothetical results are labeled as such throughout the UI.
+- Ratings, scores and notes are analyst judgments; company descriptions are self-reported. The UI tags each value as public fact, self-report, analyst judgment, assumption, model output or unknown.
+
+## Features
+
+Investment overview · Acquisition pipeline (search, filters, sortable ranking, URL-persisted state, CSV export, editable scoring weights) · 30 company profiles · Market intelligence (dated, sourced) · Acquisition underwriting (live recalculation) · Scenario and sensitivity analysis · Simulated deal-execution workflow (all items "not commenced") · Evidence register · Methodology · Exact-copy downloads of the supplied PDFs, workbook and CSVs.
 
 ## Architecture
 
-| Path                                          | Role                                                                                                                                            |
-| --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Ridgepeak_Fortress_Research/`                | Authoritative source files (read-only).                                                                                                         |
-| `scripts/xlsx-read.ts`, `extract-workbook.ts` | Read-only OOXML reader (the workbook uses an `x:` prefix that common libraries cannot parse). Extracts labeled assumptions only, never outputs. |
-| `src/data/`                                   | Generated assumptions/market JSON, execution and narrative text with PDF page citations, downloads manifest.                                    |
-| `src/lib/finance/`                            | Pure calculation engine (`engine.ts`), input specs and two-decimal enforcement (`inputs.ts`), formatting. No UI imports.                        |
-| `src/lib/research/`                           | CSV parser, Zod schemas (strict), integrity rules, scoring, derived data-quality flags.                                                         |
-| `src/app/`, `src/components/`                 | Next.js App Router pages and UI. Pages render data; no data rows live in JSX.                                                                   |
-| `tests/unit`, `tests/e2e`                     | Vitest and Playwright (+ axe).                                                                                                                  |
+| Path                           | Role                                                                                         |
+| ------------------------------ | -------------------------------------------------------------------------------------------- |
+| `Ridgepeak_Fortress_Research/` | Authoritative source files, committed unmodified.                                            |
+| `scripts/`                     | Read-only workbook reader and assumption extractor; download sync with SHA-256 check.        |
+| `src/data/`                    | Generated assumption/market JSON, cited narrative and execution text, downloads manifest.    |
+| `src/lib/finance/`             | Pure calculation engine, input specs and two-decimal enforcement, formatting. No UI imports. |
+| `src/lib/research/`            | CSV parser, strict Zod schemas, integrity rules, scoring, derived data-quality flags.        |
+| `src/app/`, `src/components/`  | Next.js 16 App Router (static generation) and UI.                                            |
+| `tests/unit`, `tests/e2e`      | Vitest; Playwright with axe.                                                                 |
 
-Routes: `/`, `/pipeline`, `/companies/[id]`, `/market`, `/underwriting`, `/sensitivity`, `/execution`, `/evidence`, `/methodology`. Unknown routes and company IDs return a 404 page.
+## Financial modeling methodology
 
-## Input provenance and formula contract
+USD millions. The engine models entry valuation, sources and uses, five-year revenue and EBITDA with synergies, depreciation, interest, cash taxes, capex, working capital and integration costs, free cash flow, mandatory amortization plus cash sweep, shortfall detection, exit, sponsor MOIC and gross IRR for downside, base and upside cases, and a 5×5 entry/exit multiple sensitivity. The full formula contract is on the Methodology page.
 
-Units: USD millions; rates stored as fractions, entered in display units (`18.00` = 18.00%). Assumptions are held as integer hundredths of their display unit, so `parse("18.00") / 10000` is bit-identical to the workbook's `0.18`; entries with more than two decimals are rejected, never rounded. Outputs keep full precision and are rounded only in `format.ts`.
+Rules: only labeled assumptions and sourced facts are typed values; every output is calculated at full precision and rounded for display only. Assumptions are stored as integer hundredths of their display unit; entries with more than two decimals are rejected, never rounded. The workbook's sensitivity grid is partial (debt sizing, paydown and exit cash held constant), and the UI says so.
 
-The engine mirrors the workbook cell for cell (entry, five-year waterfall with mandatory amortization and cash sweep, shortfall detection, exit, MOIC, IRR, 5×5 partial sensitivity). Documented, intentional differences:
+## Excel formula parity
 
-1. Invalid math (sponsor equity ≤ 0, negative exit equity) yields an error flag and no IRR, where Excel's `IFERROR` would show 0.
-2. Hold period is locked at 5 (the workbook forecasts and exits in Year 5).
-3. Added, labeled extensions: value-creation bridge, break-even multiples, mechanical stress flexes, full re-underwrite grid.
+`Fortress_Illustrative_Acquisition_Underwriting.xlsx` is the source of truth. Tests require, to absolute tolerance 1e-6: every returns field, entry sources and uses, all periods of the cash waterfall for the three cases (IRR 17.92% / 25.12% / 32.03%; MOIC 2.28x / 3.07x / 4.01x), all 25 sensitivity cells, and a center cell equal to the selected case IRR. Edited copies of the workbook are also recalculated headlessly in LibreOffice and compared to the engine. Documented differences: invalid math (non-positive sponsor equity) yields an error flag instead of Excel's `IFERROR` zero, and the hold period is locked to the workbook's 5-year forecast.
 
-The workbook's sensitivity grid is **partial** (debt, paydown and exit cash held constant); the UI states this wherever the grid appears.
+## Installation and local development
 
-## Tests
+Requires Node.js 20+ (developed on 24).
 
-- Reference parity: every returns field, entry sources/uses, all six periods of the cash waterfall for all three cases, the 25-cell grid, tolerance 1e-6.
-- Workbook parity: engine vs cached cells for every forecast row; drift check on extracted JSON.
-- LibreOffice differential: edited copies of the workbook are fully recalculated headlessly and compared to the engine (changed entry, rollover, synergies, debt-cap binding, funding shortfall). Skipped only if LibreOffice is not installed.
-- Data: exactly 30 unique companies, https sources, evidence rows, no sale/contact/financial claims, strict schemas, scores/labels vs workbook.
-- Browser: all routes, navigation, URL filters, sorting every column, CSV export, keyboard, 404s, mobile overflow, axe (WCAG 2 A/AA), downloads byte-equal by SHA-256.
+```bash
+npm install
+npm run dev        # http://localhost:3000 (syncs downloads first)
+```
+
+## Testing
+
+```bash
+npm test                        # unit, parity and data-integrity tests (Vitest)
+npm run build && npm run test:e2e   # browser tests (first run: npx playwright install chromium)
+npm run check                   # format, lint, typecheck, unit tests, build, browser tests
+BASE_URL=https://your-site npx playwright test   # run the browser suite against a deployed site
+```
+
+The LibreOffice differential test runs only if LibreOffice is installed (`soffice`).
 
 ## Deployment
 
-`npm run build` produces a static site (SSG). Deploy with `vercel` or any Node host. No environment variables or API keys. Not deployed from this repo unless stated in the delivery report.
+The app is a static Next.js build with no environment variables or secrets. Deploy with the Vercel CLI (`vercel deploy --prod`) or by importing the repository in Vercel (framework: Next.js, production branch: `main`). The build copies the six supplied downloads byte for byte from `Ridgepeak_Fortress_Research/` and fails on any hash mismatch.
 
-## Limits
+## Limitations
 
-No licensing, ownership or financial verification exists for any company. The model excludes tax basis step-up, working-capital peg, purchase accounting, indemnities, revolver draws and equity cures; returns are gross.
+No licensing, ownership or financial verification exists for any company. The model excludes tax basis step-up, working-capital peg, purchase accounting, indemnities, revolver draws and equity cures; returns are gross. Source links are not re-checked live.
+
+## Disclaimer
+
+This is an independent applicant work sample. It is not affiliated with, authorized by, or prepared for Ridgepeak Partners or Fortress Service Partners, and it is not an offer, a solicitation or investment advice.
