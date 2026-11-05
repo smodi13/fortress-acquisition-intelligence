@@ -21,7 +21,15 @@ import {
   type WeightState,
 } from "@/lib/research/score";
 import { parseDisplay, toDisplayText } from "@/lib/finance/inputs";
-import { OUTREACH_LABEL, STANCE_LABEL, outreachOf, type OutreachStatus } from "@/lib/research/stance";
+import {
+  OUTREACH_LABEL,
+  OWNERSHIP_LABEL,
+  PE_LABEL,
+  SELLER_INTENT_LABEL,
+  STANCE_LABEL,
+  outreachOf,
+  type OutreachStatus,
+} from "@/lib/research/stance";
 
 type Row = Company & {
   score: number;
@@ -43,6 +51,7 @@ type SortKey =
   | "conf"
   | "flags"
   | "stance"
+  | "ownership"
   | "outreach";
 const OUTREACH_ORDER: OutreachStatus[] = ["SHORTLIST", "NOT_ESTABLISHED", "EXCLUDED"];
 const LABEL_ORDER: Record<ResearchLabel, number> = { "High research": 0, "Medium research": 1, Watchlist: 2 };
@@ -56,6 +65,11 @@ const COLS: { key: SortKey; head: string; num?: boolean; get: (r: Row) => string
   { key: "founded", head: "Founded", num: true, get: (r) => r.foundedYear ?? Number.POSITIVE_INFINITY },
   { key: "score", head: "Score", num: true, get: (r) => r.score },
   { key: "label", head: "Strategic fit", get: (r) => LABEL_ORDER[r.label] },
+  {
+    key: "ownership",
+    head: "Ownership (self-reported)",
+    get: (r) => (r.ownership ? 0 : 1),
+  },
   { key: "stance", head: "Public owner stance", get: (r) => STANCES.indexOf(r.stance) },
   { key: "outreach", head: "Outreach status", get: (r) => OUTREACH_ORDER.indexOf(r.outreach) },
   { key: "owner", head: "Owner evidence (1–5)", num: true, get: (r) => r.ratings.owner },
@@ -92,6 +106,8 @@ export function PipelineClient({ companies }: { companies: Company[] }) {
   const mix = sp.get("mix") ?? "";
   const lab = sp.get("label") ?? "";
   const stanceF = sp.get("stance") ?? "";
+  const ownF = sp.get("ownership") ?? "";
+  const peF = sp.get("pe") ?? "";
   const outF = sp.get("outreach") ?? "";
   const conf = sp.get("conf") ?? "";
 
@@ -139,6 +155,8 @@ export function PipelineClient({ companies }: { companies: Company[] }) {
     const fmix = p.get("mix") ?? "";
     const flab = p.get("label") ?? "";
     const fstance = p.get("stance") ?? "";
+    const fown = p.get("ownership") ?? "";
+    const fpe = p.get("pe") ?? "";
     const fout = p.get("outreach") ?? "";
     const fconf = p.get("conf") ?? "";
     const skey = (p.get("sort") as SortKey | null) ?? "rank";
@@ -156,6 +174,8 @@ export function PipelineClient({ companies }: { companies: Company[] }) {
         (!fmix || r.businessMix === fmix) &&
         (!flab || r.label === flab) &&
         (!fstance || r.stance === fstance) &&
+        (!fown || (r.ownership?.ownershipType ?? "NOT_ASSESSED") === fown) &&
+        (!fpe || (r.ownership?.peStatus ?? "NOT_ASSESSED") === fpe) &&
         (!fout || r.outreach === fout) &&
         (!fconf || r.ratings.sourceConfidence >= Number(fconf)),
     );
@@ -180,7 +200,9 @@ export function PipelineClient({ companies }: { companies: Company[] }) {
       u.set("sort", k);
       u.set("dir", sort === k && dir === "asc" ? "desc" : "asc");
     });
-  const filtered = Boolean(q0 || metros.length || services.length || mix || lab || conf || stanceF || outF);
+  const filtered = Boolean(
+    q0 || metros.length || services.length || mix || lab || conf || stanceF || outF || ownF || peF,
+  );
 
   const exportCsv = () => {
     const header = [
@@ -202,6 +224,10 @@ export function PipelineClient({ companies }: { companies: Company[] }) {
       "research_score",
       "research_rank",
       "strategic_fit_research_priority",
+      "ownership_type_self_reported",
+      "pe_status_self_reported",
+      "ownership_source_url",
+      "seller_intent",
       "public_owner_stance",
       "owner_stance_source_url",
       "outreach_status",
@@ -229,6 +255,10 @@ export function PipelineClient({ companies }: { companies: Company[] }) {
       r.score.toFixed(4),
       String(r.rank),
       r.label,
+      OWNERSHIP_LABEL[r.ownership?.ownershipType ?? "NOT_ASSESSED"],
+      PE_LABEL[r.ownership?.peStatus ?? "NOT_ASSESSED"],
+      r.ownership?.sourceUrl ?? "",
+      SELLER_INTENT_LABEL,
       STANCE_LABEL[r.stance],
       r.stanceFinding?.sourceUrl ?? "",
       OUTREACH_LABEL[r.outreach],
@@ -277,6 +307,22 @@ export function PipelineClient({ companies }: { companies: Company[] }) {
               {(["High research", "Medium research", "Watchlist"] as const).map((l) => (
                 <option key={l}>{l}</option>
               ))}
+            </select>
+          </label>
+          <label>
+            Ownership (self-reported)
+            <select value={ownF} onChange={(e) => setOne("ownership", e.target.value)} className="plain">
+              <option value="">All</option>
+              <option value="FAMILY_OWNED">{OWNERSHIP_LABEL.FAMILY_OWNED}</option>
+              <option value="NOT_ASSESSED">{OWNERSHIP_LABEL.NOT_ASSESSED}</option>
+            </select>
+          </label>
+          <label>
+            PE backing (self-reported)
+            <select value={peF} onChange={(e) => setOne("pe", e.target.value)} className="plain">
+              <option value="">All</option>
+              <option value="NO_PE_REPORTED">{PE_LABEL.NO_PE_REPORTED}</option>
+              <option value="NOT_ASSESSED">{PE_LABEL.NOT_ASSESSED}</option>
             </select>
           </label>
           <label>
@@ -481,6 +527,22 @@ export function PipelineClient({ companies }: { companies: Company[] }) {
                   >
                     {r.label}
                   </span>
+                </td>
+                <td>
+                  {r.ownership ? (
+                    <>
+                      <span className="pill watch">Family-owned</span>{" "}
+                      <span className="pill watch">No PE reported</span>
+                      <div className="src">
+                        Company self-report,{" "}
+                        <a href={r.ownership.sourceUrl} target="_blank" rel="noopener noreferrer">
+                          source<span className="sr-only"> (opens in a new tab)</span>
+                        </a>
+                      </div>
+                    </>
+                  ) : (
+                    <span className="muted">Not yet assessed</span>
+                  )}
                 </td>
                 <td>
                   <span className={`pill ${r.stance === "OPPOSED" ? "bad" : "watch"}`}>

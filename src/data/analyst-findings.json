@@ -1,23 +1,61 @@
 {
-  "source": "Analyst-supplied findings from an independent analyst's review of public company statements. Entered into this application on 2026-11-04. Not part of the original research CSVs, which are unchanged.",
-  "findings": [
-    {
-      "companyId": "FAI-004",
-      "stance": "OPPOSED",
-      "statement": "SALT reports that it has never taken private equity investment and has no plans to sell.",
-      "sourceUrl": "https://callsalt.com/why-salt-stays-privately-owned/",
-      "accessedDate": "2026-11-04",
-      "provenance": "company_self_reported",
-      "independentlyVerified": false
-    },
-    {
-      "companyId": "FAI-005",
-      "stance": "OPPOSED",
-      "statement": "The owners say they intend to remain locally owned and have no plans to change that.",
-      "sourceUrl": "https://efficienttexas.com/about/",
-      "accessedDate": "2026-11-04",
-      "provenance": "company_self_reported",
-      "independentlyVerified": false
-    }
-  ]
+ "source": "Analyst-supplied findings from an independent analyst's review of public company statements. Entered into this application on 2026-11-04. Not part of the original research CSVs, which are unchanged. Ownership characteristics (family-owned, not PE-backed) for FAI-001, FAI-007 and FAI-013 were added on 2026-11-04 as company self-reports; they are separate from, and imply nothing about, the public owner stance or seller intent.",
+ "findings": [
+  {
+   "companyId": "FAI-004",
+   "stance": "OPPOSED",
+   "statement": "SALT reports that it has never taken private equity investment and has no plans to sell.",
+   "sourceUrl": "https://callsalt.com/why-salt-stays-privately-owned/",
+   "accessedDate": "2026-11-04",
+   "provenance": "company_self_reported",
+   "independentlyVerified": false
+  },
+  {
+   "companyId": "FAI-005",
+   "stance": "OPPOSED",
+   "statement": "The owners say they intend to remain locally owned and have no plans to change that.",
+   "sourceUrl": "https://efficienttexas.com/about/",
+   "accessedDate": "2026-11-04",
+   "provenance": "company_self_reported",
+   "independentlyVerified": false
+  }
+ ],
+ "ownershipFindings": [
+  {
+   "companyId": "FAI-001",
+   "ownershipType": "FAMILY_OWNED",
+   "peStatus": "NO_PE_REPORTED",
+   "peNote": "Company reports it has never been acquired by a franchise, chain or private equity firm (no previous PE acquisition).",
+   "statement": "The company describes itself as owned and operated by Christopher Alan Woods and says it has never been acquired by a franchise, chain, or private equity firm.",
+   "sourceUrl": "https://woodscomfortsystems.com/about-us/",
+   "reviewDate": "2026-11-04",
+   "researchQualification": "ELIGIBLE",
+   "provenance": "company_self_reported",
+   "independentlyVerified": false
+  },
+  {
+   "companyId": "FAI-007",
+   "ownershipType": "FAMILY_OWNED",
+   "peStatus": "NO_PE_REPORTED",
+   "peNote": "Company reports it is not owned by private equity (no current PE backing).",
+   "statement": "The company says it is family-owned, not franchised, and not owned by private equity.",
+   "sourceUrl": "https://abaaustin.com/about-us/",
+   "reviewDate": "2026-11-04",
+   "researchQualification": "ELIGIBLE",
+   "provenance": "company_self_reported",
+   "independentlyVerified": false
+  },
+  {
+   "companyId": "FAI-013",
+   "ownershipType": "FAMILY_OWNED",
+   "peStatus": "NO_PE_REPORTED",
+   "peNote": "Company describes itself as independent rather than a corporate franchise or private-equity rollup.",
+   "statement": "The company describes itself as a family-owned operation rather than a corporate franchise or private-equity rollup.",
+   "sourceUrl": "https://manuelandsons.com/about",
+   "reviewDate": "2026-11-04",
+   "researchQualification": "ELIGIBLE",
+   "provenance": "company_self_reported",
+   "independentlyVerified": false
+  }
+ ]
 }

@@ -1,5 +1,14 @@
 import { z } from "zod";
-import { EvidenceRow, Finding, PipelineRow, metroOf, type Company, type FindingRecord } from "./schema";
+import {
+  EvidenceRow,
+  Finding,
+  OwnershipFinding,
+  PipelineRow,
+  metroOf,
+  type Company,
+  type FindingRecord,
+  type OwnershipRecord,
+} from "./schema";
 
 export const EXPECTED_COMPANIES = 30;
 
@@ -8,7 +17,13 @@ export function normalize(
   pipelineRaw: Record<string, string>[],
   evidenceRaw: Record<string, string>[],
   findingsRaw: unknown[] = [],
+  ownershipRaw: unknown[] = [],
 ): Company[] {
+  const owned = new Map<string, OwnershipRecord>();
+  for (const f of z.array(OwnershipFinding).parse(ownershipRaw)) {
+    if (owned.has(f.companyId)) throw new Error(`${f.companyId}: duplicate ownership finding`);
+    owned.set(f.companyId, f);
+  }
   const findings: FindingRecord[] = z.array(Finding).parse(findingsRaw);
   const byId = new Map<string, FindingRecord>();
   for (const f of findings) {
@@ -42,6 +57,7 @@ export function normalize(
       evidence: e,
       stance: byId.get(r.id)?.stance ?? "NOT_ASSESSED",
       stanceFinding: byId.get(r.id) ?? null,
+      ownership: owned.get(r.id) ?? null,
     };
   });
 }
@@ -84,6 +100,11 @@ export function integrityErrors(companies: Company[], evidenceRaw: Record<string
       const host = (u: string) => new URL(u).hostname.replace(/^www\./, "");
       if (host(c.stanceFinding.sourceUrl) !== host(c.sourceUrl))
         errs.push(`${c.id}: stance source must be on the company's own domain`);
+    }
+    if (c.ownership) {
+      const host = (u: string) => new URL(u).hostname.replace(/^www\./, "");
+      if (host(c.ownership.sourceUrl) !== host(c.sourceUrl))
+        errs.push(`${c.id}: ownership source must be on the company's own domain`);
     }
     if (c.evidence.source_url !== c.sourceUrl)
       errs.push(`${c.id}: evidence URL differs from primary_source_url`);

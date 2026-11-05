@@ -144,6 +144,16 @@ export default function Methodology() {
           <em>Readiness not established</em>. Excluded companies stay in the research universe with unchanged
           scores. No company is a confirmed seller.
         </p>
+        <p>
+          <strong>Ownership characteristics are a separate field from stance.</strong> “Family-owned” and “not
+          currently PE-backed” are company self-reports recorded with a source and review date (currently
+          Woods Comfort Systems, ABA Heating &amp; Cooling and Manuel &amp; Sons Service Co.). They describe
+          who owns the business today, not whether the owner would sell, so they never set the stance, never
+          exclude a company, and never add one to the outreach shortlist. These companies remain eligible for
+          research qualification with seller intent Unknown and outreach status “Readiness not established”.
+          Four things are therefore kept distinct: family-owned, not currently PE-backed, publicly opposed to
+          selling (SALT, Efficient only), and publicly open to partnerships (none identified).
+        </p>
       </section>
 
       <section className="card" style={{ marginTop: "1rem" }} aria-labelledby="h-fin">

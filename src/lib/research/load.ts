@@ -19,9 +19,12 @@ export function loadDataset(): Dataset {
   if (cache) return cache;
   const pipeline = parseCsv(read("screening_pipeline_30.csv"));
   const evidence = parseCsv(read("evidence_register.csv"));
-  const findings = FindingsFile.parse(findingsFile).findings;
-  const companies = normalize(pipeline, evidence, findings);
-  const unknown = findings.filter((f) => !companies.some((c) => c.id === f.companyId));
+  const parsed = FindingsFile.parse(findingsFile);
+  const findings = parsed.findings;
+  const companies = normalize(pipeline, evidence, findings, parsed.ownershipFindings);
+  const unknown = [...findings, ...parsed.ownershipFindings].filter(
+    (f) => !companies.some((c) => c.id === f.companyId),
+  );
   const manifest = Manifest.parse(JSON.parse(read("research_manifest.json")));
   const errs = integrityErrors(companies, evidence);
   for (const f of unknown) errs.push(`analyst finding for unknown company ${f.companyId}`);

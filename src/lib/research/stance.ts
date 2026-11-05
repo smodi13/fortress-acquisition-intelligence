@@ -4,7 +4,10 @@
  * from the immediate outreach shortlist; it stays in the research universe with its original score.
  * No stance is ever inferred: companies without an analyst-supplied finding are NOT_ASSESSED.
  */
-import type { Stance } from "./schema";
+import type { OwnershipRecord, Stance } from "./schema";
+
+type OwnershipType = OwnershipRecord["ownershipType"];
+type PeStatus = OwnershipRecord["peStatus"];
 import type { ResearchLabel } from "./score";
 
 export const STANCE_LABEL: Record<Stance, string> = {
@@ -34,3 +37,15 @@ export function outreachOf(stance: Stance, fit: ResearchLabel): OutreachStatus {
   if (stance === "OPEN" && fit !== "Watchlist") return "SHORTLIST";
   return "NOT_ESTABLISHED";
 }
+
+/** Ownership characteristics: who owns the business and whether it reports PE backing. Not a transaction stance. */
+export const OWNERSHIP_LABEL: Record<OwnershipType | "NOT_ASSESSED", string> = {
+  FAMILY_OWNED: "Family-owned (company self-reported)",
+  NOT_ASSESSED: "Not yet assessed",
+};
+export const PE_LABEL: Record<PeStatus | "NOT_ASSESSED", string> = {
+  NO_PE_REPORTED: "Not currently PE-backed (company self-reported)",
+  NOT_ASSESSED: "Not yet assessed",
+};
+/** Seller intent is Unknown for every company: no ownership or stance finding changes it. */
+export const SELLER_INTENT_LABEL = "Unknown";

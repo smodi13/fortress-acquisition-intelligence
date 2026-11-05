@@ -161,6 +161,12 @@ export default function Overview() {
               only: {firstPartyOnly})
             </li>
             <li>
+              Ownership characteristics (family-owned, not PE-backed; self-reported):{" "}
+              <strong>
+                {companies.filter((c) => c.ownership).length} of {companies.length}
+              </strong>
+            </li>
+            <li>
               Owner stance assessed:{" "}
               <strong>
                 {findings.length} of {companies.length}

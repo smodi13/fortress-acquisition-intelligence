@@ -124,7 +124,7 @@ test.describe("pipeline", () => {
     await page.goto("/pipeline");
     const heads = page.locator('[data-testid="pipeline-table"] thead th button');
     const count = await heads.count();
-    expect(count).toBe(13);
+    expect(count).toBe(14);
     for (let i = 0; i < count; i++) {
       await heads.nth(i).click();
       await expect(
@@ -192,7 +192,7 @@ test.describe("company profiles", () => {
     await page.goto("/companies/FAI-001");
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Woods Comfort Systems");
     await expect(page.getByText("Christopher Alan Woods")).toBeVisible();
-    const src = page.getByRole("link", { name: /woodscomfortsystems\.com\/about-us/ });
+    const src = page.getByRole("link", { name: /woodscomfortsystems\.com\/about-us/ }).first();
     await expect(src).toHaveAttribute("href", "https://woodscomfortsystems.com/about-us/");
     await expect(src).toHaveAttribute("target", "_blank");
     await expect(src).toHaveAttribute("rel", /noopener/);
@@ -222,6 +222,33 @@ test.describe("company profiles", () => {
     await page.goto("/companies/FAI-001");
     await expect(page.locator("#h-stance").locator("..")).toContainText("Not yet assessed");
     await expect(page.locator("#h-stance").locator("..")).toContainText("Readiness not established");
+  });
+
+  test("family-owned / not-PE-backed companies stay eligible, not opposed, not shortlisted", async ({
+    page,
+  }) => {
+    for (const [id, url] of [
+      ["FAI-001", "https://woodscomfortsystems.com/about-us/"],
+      ["FAI-007", "https://abaaustin.com/about-us/"],
+      ["FAI-013", "https://manuelandsons.com/about"],
+    ]) {
+      await page.goto(`/companies/${id}`);
+      const own = page.locator("#h-own").locator("..");
+      await expect(own).toContainText("Family-owned (company self-reported)");
+      await expect(own).toContainText("Not currently PE-backed");
+      await expect(own).toContainText("reviewed 2026-11-04");
+      await expect(own.getByRole("row", { name: /^Seller intent/ })).toContainText("Unknown");
+      await expect(own.getByRole("row", { name: /^Public opposition/ })).toContainText("Not established");
+      await expect(own.locator(`a[href="${url}"]`)).toBeVisible();
+      await expect(page.locator("#h-stance").locator("..")).toContainText("Readiness not established");
+      await expect(page.locator("#h-stance").locator("..")).not.toContainText("Excluded");
+    }
+    await page.goto("/pipeline?ownership=FAMILY_OWNED&pe=NO_PE_REPORTED");
+    await expect(page.locator('[data-testid="pipeline-table"] tbody tr')).toHaveCount(3);
+    await page.goto("/pipeline?ownership=FAMILY_OWNED&outreach=EXCLUDED");
+    await expect(page.getByTestId("result-count")).toContainText("Showing 0 of 30");
+    await page.goto("/evidence");
+    await expect(page.getByTestId("ownership-findings").locator("li")).toHaveCount(3);
   });
 
   test("pipeline stance/outreach filters and export columns", async ({ page }) => {

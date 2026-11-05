@@ -70,7 +70,34 @@ export const Finding = z
     independentlyVerified: z.literal(false),
   })
   .strict();
-export const FindingsFile = z.object({ source: z.string().min(1), findings: z.array(Finding) }).strict();
+/**
+ * Ownership characteristics (who owns it, whether PE-backed). Deliberately a different record from `Finding`:
+ * being family-owned or not PE-backed says nothing about willingness to sell and never sets a stance.
+ */
+export const OWNERSHIP_TYPES = ["FAMILY_OWNED"] as const;
+export const PE_STATUSES = ["NO_PE_REPORTED"] as const;
+export const OwnershipFinding = z
+  .object({
+    companyId: z.string().regex(/^FAI-\d{3}$/),
+    ownershipType: z.enum(OWNERSHIP_TYPES),
+    peStatus: z.enum(PE_STATUSES),
+    peNote: z.string().min(10),
+    statement: z.string().min(10),
+    sourceUrl: httpsUrl,
+    reviewDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    researchQualification: z.literal("ELIGIBLE"),
+    provenance: z.literal("company_self_reported"),
+    independentlyVerified: z.literal(false),
+  })
+  .strict();
+export type OwnershipRecord = z.infer<typeof OwnershipFinding>;
+export const FindingsFile = z
+  .object({
+    source: z.string().min(1),
+    findings: z.array(Finding),
+    ownershipFindings: z.array(OwnershipFinding).default([]),
+  })
+  .strict();
 export type FindingRecord = z.infer<typeof Finding>;
 
 export type Ratings = {
@@ -111,4 +138,6 @@ export interface Company {
   /** NOT_ASSESSED unless an analyst-supplied finding exists for this company. No stance is ever inferred. */
   stance: Stance;
   stanceFinding: FindingRecord | null;
+  /** Self-reported ownership characteristics. Independent of `stance`. null = not assessed. */
+  ownership: OwnershipRecord | null;
 }

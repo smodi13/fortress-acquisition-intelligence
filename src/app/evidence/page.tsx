@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Callout, ExtLink, PageHead, Tag } from "@/components/ui";
-import { STANCE_LABEL } from "@/lib/research/stance";
+import { OWNERSHIP_LABEL, PE_LABEL, STANCE_LABEL } from "@/lib/research/stance";
 import { loadDataset } from "@/lib/research/load";
 import { countBy } from "@/lib/research/summary";
 import { EvidenceClient } from "./EvidenceClient";
@@ -77,6 +77,27 @@ export default function Evidence() {
                 <strong>{c.name}</strong> ({c.id}): {STANCE_LABEL[c.stance]}. “{c.stanceFinding!.statement}”{" "}
                 <ExtLink href={c.stanceFinding!.sourceUrl}>{c.stanceFinding!.sourceUrl}</ExtLink>
                 <span className="src"> · accessed {c.stanceFinding!.accessedDate}</span>
+              </li>
+            ))}
+        </ul>
+      </section>
+
+      <section className="card" style={{ marginTop: "1rem" }} aria-labelledby="h-own">
+        <h2 id="h-own">Analyst-supplied ownership characteristics</h2>
+        <p className="small muted">
+          Family-owned / not PE-backed, as the companies describe themselves <Tag kind="self" />. Not
+          independently verified, and not a statement about willingness to sell (seller intent remains
+          Unknown).
+        </p>
+        <ul className="clean" data-testid="ownership-findings">
+          {companies
+            .filter((c) => c.ownership)
+            .map((c) => (
+              <li key={c.id}>
+                <strong>{c.name}</strong> ({c.id}): {OWNERSHIP_LABEL[c.ownership!.ownershipType]};{" "}
+                {PE_LABEL[c.ownership!.peStatus]}. “{c.ownership!.statement}”{" "}
+                <ExtLink href={c.ownership!.sourceUrl}>{c.ownership!.sourceUrl}</ExtLink>
+                <span className="src"> · reviewed {c.ownership!.reviewDate}</span>
               </li>
             ))}
         </ul>

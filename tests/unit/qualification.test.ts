@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { execSync } from "node:child_process";
 import { loadDataset } from "@/lib/research/load";
-import { Finding } from "@/lib/research/schema";
+import { Finding, OwnershipFinding } from "@/lib/research/schema";
 import { OUTREACH_LABEL, STANCE_LABEL, outreachOf } from "@/lib/research/stance";
 import { integrityErrors, normalize } from "@/lib/research/validate";
 import { scoredDefault } from "@/lib/research/summary";
@@ -102,5 +102,80 @@ describe("strategic fit is preserved", () => {
     const out = execSync("git status --porcelain -- Ridgepeak_Fortress_Research", { encoding: "utf8" });
     expect(out.trim()).toBe("");
     expect(readSrc("screening_pipeline_30.csv")).not.toMatch(/OPPOSED|stance/i);
+  });
+});
+
+describe("ownership characteristics are distinct from stance and seller intent", () => {
+  const { companies } = loadDataset();
+  const by = (id: string) => companies.find((c) => c.id === id)!;
+  const good = {
+    companyId: "FAI-001",
+    ownershipType: "FAMILY_OWNED",
+    peStatus: "NO_PE_REPORTED",
+    peNote: "Company reports no PE acquisition.",
+    statement: "A sourced company statement.",
+    sourceUrl: "https://woodscomfortsystems.com/about-us/",
+    reviewDate: "2026-11-04",
+    researchQualification: "ELIGIBLE",
+    provenance: "company_self_reported",
+    independentlyVerified: false,
+  };
+
+  it("exactly Woods, ABA and Manuel are family-owned and not PE-backed (self-reported)", () => {
+    const ids = companies.filter((c) => c.ownership).map((c) => c.id);
+    expect(ids.sort()).toEqual(["FAI-001", "FAI-007", "FAI-013"]);
+    for (const id of ids) {
+      expect(by(id).ownership).toMatchObject({
+        ownershipType: "FAMILY_OWNED",
+        peStatus: "NO_PE_REPORTED",
+        reviewDate: "2026-11-04",
+        independentlyVerified: false,
+      });
+    }
+    expect(by("FAI-001").ownership?.sourceUrl).toBe("https://woodscomfortsystems.com/about-us/");
+    expect(by("FAI-007").ownership?.sourceUrl).toBe("https://abaaustin.com/about-us/");
+    expect(by("FAI-013").ownership?.sourceUrl).toBe("https://manuelandsons.com/about");
+  });
+  it("family-owned / not PE-backed never implies opposition, openness or exclusion", () => {
+    for (const id of ["FAI-001", "FAI-007", "FAI-013"]) {
+      const c = by(id);
+      expect(c.stance).toBe("NOT_ASSESSED");
+      expect(c.stanceFinding).toBeNull();
+      expect(outreachOf(c.stance, "High research")).toBe("NOT_ESTABLISHED");
+      expect(c.evidence.seller_intent).toMatch(/^Unknown/);
+    }
+  });
+  it("classification counts", () => {
+    const stanceCount = (s: string) => companies.filter((c) => c.stance === s).length;
+    expect(stanceCount("OPPOSED")).toBe(2);
+    expect(stanceCount("OPEN")).toBe(0);
+    expect(stanceCount("NOT_ASSESSED")).toBe(28);
+    expect(companies.filter((c) => c.ownership?.ownershipType === "FAMILY_OWNED")).toHaveLength(3);
+    expect(companies.filter((c) => c.ownership?.peStatus === "NO_PE_REPORTED")).toHaveLength(3);
+    // SALT / Efficient keep OPPOSED and have no ownership finding mixed in
+    expect(by("FAI-004").stance).toBe("OPPOSED");
+    expect(by("FAI-005").stance).toBe("OPPOSED");
+    expect(by("FAI-004").ownership).toBeNull();
+  });
+  it("scores of the three are unchanged", () => {
+    const r = scoredDefault(companies);
+    expect(r.find((x) => x.id === "FAI-001")!.score.toFixed(2)).toBe("4.85");
+    expect(r.find((x) => x.id === "FAI-007")!.score.toFixed(2)).toBe("4.65");
+  });
+  it("ownership schema rejects a stance field, verified=true and http", () => {
+    expect(OwnershipFinding.safeParse(good).success).toBe(true);
+    expect(OwnershipFinding.safeParse({ ...good, stance: "OPPOSED" }).success).toBe(false);
+    expect(OwnershipFinding.safeParse({ ...good, independentlyVerified: true }).success).toBe(false);
+    expect(OwnershipFinding.safeParse({ ...good, sourceUrl: "http://x.com/a" }).success).toBe(false);
+    expect(OwnershipFinding.safeParse({ ...good, ownershipType: "OPPOSED" }).success).toBe(false);
+  });
+  it("a duplicate ownership finding throws; off-domain source is flagged", () => {
+    const pipe = parseCsv(readSrc("screening_pipeline_30.csv"));
+    const ev = parseCsv(readSrc("evidence_register.csv"));
+    expect(() => normalize(pipe, ev, [], [good, { ...good }])).toThrow();
+    const bad = companies.map((c) =>
+      c.id === "FAI-001" ? { ...c, ownership: { ...c.ownership!, sourceUrl: "https://example.org/x" } } : c,
+    );
+    expect(integrityErrors(bad, ev).some((e) => e.includes("FAI-001"))).toBe(true);
   });
 });

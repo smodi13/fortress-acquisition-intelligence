@@ -7,7 +7,14 @@ import { loadDataset } from "@/lib/research/load";
 import { WEIGHT_KEYS, WEIGHT_LABELS, defaultWeights, labelOf, score } from "@/lib/research/score";
 import { scoredDefault } from "@/lib/research/summary";
 import { fromStored } from "@/lib/finance/inputs";
-import { OUTREACH_LABEL, STANCE_LABEL, outreachOf } from "@/lib/research/stance";
+import {
+  OUTREACH_LABEL,
+  OWNERSHIP_LABEL,
+  PE_LABEL,
+  SELLER_INTENT_LABEL,
+  STANCE_LABEL,
+  outreachOf,
+} from "@/lib/research/stance";
 
 export const dynamicParams = false;
 export function generateStaticParams() {
@@ -36,6 +43,7 @@ export default async function CompanyPage({ params }: Props) {
   const flags = dataFlags(c);
   const outreach = outreachOf(c.stance, label);
   const sf = c.stanceFinding;
+  const ow = c.ownership;
   const prev = companies[idx - 1];
   const next = companies[idx + 1];
   const years = c.foundedYear === null ? null : AS_OF_YEAR - c.foundedYear;
@@ -150,6 +158,41 @@ export default async function CompanyPage({ params }: Props) {
           </p>
         </section>
       </div>
+
+      <section className="card" aria-labelledby="h-own" style={{ marginTop: "1rem" }}>
+        <h2 id="h-own">Ownership characteristics (separate from seller stance)</h2>
+        <table>
+          <tbody>
+            <tr>
+              <th scope="row">Current ownership</th>
+              <td>{OWNERSHIP_LABEL[ow?.ownershipType ?? "NOT_ASSESSED"]}</td>
+            </tr>
+            <tr>
+              <th scope="row">PE backing</th>
+              <td>{PE_LABEL[ow?.peStatus ?? "NOT_ASSESSED"]}</td>
+            </tr>
+            <tr>
+              <th scope="row">Seller intent</th>
+              <td>{SELLER_INTENT_LABEL}</td>
+            </tr>
+            <tr>
+              <th scope="row">Public opposition to selling</th>
+              <td>{c.stance === "OPPOSED" ? STANCE_LABEL.OPPOSED : "Not established"}</td>
+            </tr>
+            <tr>
+              <th scope="row">Research qualification</th>
+              <td>{ow ? "Eligible" : "Eligible for research (no change)"}</td>
+            </tr>
+          </tbody>
+        </table>
+        {ow && (
+          <p className="src">
+            <Tag kind="self" /> {ow.peNote} Source: <ExtLink href={ow.sourceUrl}>{ow.sourceUrl}</ExtLink> ·
+            reviewed {ow.reviewDate} · company self-reported, not independently verified. Being family-owned
+            or not PE-backed does not indicate willingness or unwillingness to sell.
+          </p>
+        )}
+      </section>
 
       <section className="card" aria-labelledby="h-stance" style={{ marginTop: "1rem" }}>
         <h2 id="h-stance">Ownership stance and transaction readiness</h2>
