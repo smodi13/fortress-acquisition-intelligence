@@ -415,7 +415,7 @@ export function PipelineClient({ companies }: { companies: Company[] }) {
             {rows.map((r) => (
               <tr key={r.id}>
                 <td className="num">{r.rank}</td>
-                <td>
+                <td className="name">
                   <Link href={`/companies/${r.id}`}>{r.name}</Link>
                   <div className="src">
                     {r.id} · {r.leadership}

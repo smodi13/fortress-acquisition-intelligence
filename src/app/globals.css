@@ -674,3 +674,16 @@ ul.clean li:last-child {
   clip: rect(0 0 0 0);
   white-space: nowrap;
 }
+td.name {
+  min-width: 15rem;
+}
+thead th {
+  vertical-align: bottom;
+  white-space: normal;
+}
+thead th button {
+  text-align: left;
+}
+.filters input[type="search"] {
+  text-align: left;
+}
