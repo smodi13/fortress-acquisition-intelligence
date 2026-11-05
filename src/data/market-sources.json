@@ -1,0 +1,53 @@
+{
+  "source": "Fortress_Illustrative_Acquisition_Underwriting.xlsx / Market Sources",
+  "rows": [
+    {
+      "topic": "Ridgepeak role",
+      "statement": "Full-cycle origination, underwriting, LOIs and execution",
+      "url": "https://jobs.ashbyhq.com/ridgepeak-partners/25579d6a-b644-4256-aa29-5e6b8e82b6f3",
+      "referenceDate": "2026-11-04"
+    },
+    {
+      "topic": "Fortress portfolio link",
+      "statement": "Ridgepeak job posting identifies Fortress as a portfolio company",
+      "url": "https://careerdesign.dartmouth.edu/jobs/ridgepeak-partners-business-development-analyst-deal-sourcing/",
+      "referenceDate": "2026-11-04"
+    },
+    {
+      "topic": "Fortress strategy",
+      "statement": "Residential services brands, owner partnership, shared services, preserve local brands",
+      "url": "https://www.fortressservicepartners.com/",
+      "referenceDate": "2026-11-04"
+    },
+    {
+      "topic": "Sector deal volume",
+      "statement": "Capstone October 2026 reports 223 YTD transactions (as of report dataset cutoff)",
+      "url": "https://www.capstonepartners.com/insights/report-residential-services-ma-update/",
+      "referenceDate": "2026-10-09"
+    },
+    {
+      "topic": "PE sponsor share",
+      "statement": "Capstone reports 60.5% sponsor share of sector M&A in its YTD coverage",
+      "url": "https://www.capstonepartners.com/insights/report-residential-services-ma-update/",
+      "referenceDate": "2026-10-09"
+    },
+    {
+      "topic": "Core-trades share",
+      "statement": "Capstone reports HVAC/plumbing/electrical at 19.3% of its sector M&A volume",
+      "url": "https://www.capstonepartners.com/insights/report-residential-services-ma-update/",
+      "referenceDate": "2026-10-09"
+    },
+    {
+      "topic": "Texas HVAC registry",
+      "statement": "TDLR state all-license public dataset; contractor-entity verification still pending",
+      "url": "https://data.texas.gov/dataset/TDLR-All-Licenses/7358-krk7/data",
+      "referenceDate": "2026-11-04"
+    },
+    {
+      "topic": "Texas plumbing registry",
+      "statement": "Plumbing Board Responsible Master Plumber daily downloadable CSV, independent check pending",
+      "url": "https://tsbpe.texas.gov/free-licensee-list/",
+      "referenceDate": "2026-11-04"
+    }
+  ]
+}

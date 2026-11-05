@@ -1,0 +1,65 @@
+{
+  "file": "Fortress_Illustrative_Acquisition_Underwriting.xlsx",
+  "checked": "2026-11-04",
+  "sheets": {
+    "Start Here": {
+      "formula_count": 0,
+      "numeric_hardcodes": 0,
+      "allowed_numeric_hardcode_cells": 0
+    },
+    "Cases": {
+      "formula_count": 0,
+      "numeric_hardcodes": 9,
+      "allowed_numeric_hardcode_cells": 9
+    },
+    "Deal Inputs": {
+      "formula_count": 3,
+      "numeric_hardcodes": 20,
+      "allowed_numeric_hardcode_cells": 20
+    },
+    "Sources Uses": {
+      "formula_count": 16,
+      "numeric_hardcodes": 0,
+      "allowed_numeric_hardcode_cells": 0
+    },
+    "5Y Forecast": {
+      "formula_count": 150,
+      "numeric_hardcodes": 6,
+      "allowed_numeric_hardcode_cells": 6
+    },
+    "Returns": {
+      "formula_count": 16,
+      "numeric_hardcodes": 0,
+      "allowed_numeric_hardcode_cells": 0
+    },
+    "Sensitivity": {
+      "formula_count": 35,
+      "numeric_hardcodes": 0,
+      "allowed_numeric_hardcode_cells": 0
+    },
+    "Score Weights": {
+      "formula_count": 1,
+      "numeric_hardcodes": 7,
+      "allowed_numeric_hardcode_cells": 7
+    },
+    "Pipeline": {
+      "formula_count": 60,
+      "numeric_hardcodes": 178,
+      "allowed_numeric_hardcode_cells": 178
+    },
+    "Market Sources": {
+      "formula_count": 0,
+      "numeric_hardcodes": 0,
+      "allowed_numeric_hardcode_cells": 0
+    },
+    "Model Checks": {
+      "formula_count": 10,
+      "numeric_hardcodes": 0,
+      "allowed_numeric_hardcode_cells": 0
+    }
+  },
+  "violations": [],
+  "total_formulas": 291,
+  "total_numeric_hardcodes": 220,
+  "passed": true
+}

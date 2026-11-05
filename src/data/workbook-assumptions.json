@@ -1,0 +1,55 @@
+{
+  "source": "Fortress_Illustrative_Acquisition_Underwriting.xlsx",
+  "units": "USD millions; rates as fractions",
+  "activeScenario": "Base",
+  "dealInputs": {
+    "baselineRevenue": 8,
+    "entryMultiple": 5,
+    "debtToEbitda": 2,
+    "maxDebtPctEv": 0.6,
+    "cashInterestRate": 0.08,
+    "taxRate": 0.25,
+    "capexPct": 0.02,
+    "depreciationPct": 0.02,
+    "nwcPctIncrementalRevenue": 0.01,
+    "rolloverPctEv": 0.2,
+    "transactionFeesPctEv": 0.02,
+    "financingFeesPctDebt": 0.01,
+    "mandatoryAmortPct": 0.1,
+    "yearlySynergy": 0.2,
+    "synergyStartYear": 2,
+    "integrationCost": 0.3,
+    "integrationYear": 1,
+    "targetIrr": 0.25,
+    "holdYears": 5,
+    "sensitivityStep": 0.5
+  },
+  "cases": {
+    "Downside": {
+      "growth": 0.02,
+      "ebitdaMargin": 0.15,
+      "exitMultiple": 4.5
+    },
+    "Base": {
+      "growth": 0.05,
+      "ebitdaMargin": 0.18,
+      "exitMultiple": 5.5
+    },
+    "Upside": {
+      "growth": 0.08,
+      "ebitdaMargin": 0.21,
+      "exitMultiple": 6.5
+    }
+  },
+  "weights": {
+    "recurring": 0.2,
+    "residential": 0.3,
+    "austin": 0.2,
+    "owner": 0.15,
+    "sourceConfidence": 0.15
+  },
+  "thresholds": {
+    "high": 4,
+    "medium": 3.5
+  }
+}

@@ -1,0 +1,25 @@
+# dependencies
+node_modules
+# build outputs
+.next
+out
+*.tsbuildinfo
+next-env.d.ts
+# generated copies of supplied downloads (recreated by scripts/sync-downloads.mjs; sources are committed)
+public/downloads
+# test artifacts
+test-results
+playwright-report
+coverage
+# environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+# local/system
+.DS_Store
+.vercel
+.idea
+.vscode
+*.log

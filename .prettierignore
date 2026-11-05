@@ -1,0 +1,7 @@
+.next
+node_modules
+Ridgepeak_Fortress_Research
+public/downloads
+test-results
+package-lock.json
+src/data/*.json

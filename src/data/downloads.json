@@ -1,0 +1,8 @@
+[
+  { "file": "Acquisition_Pipeline_Executive_Brief.pdf", "label": "Acquisition Pipeline Executive Brief", "kind": "PDF", "description": "First-pass market and sourcing recommendation; top-12 research leads." },
+  { "file": "Conditional_Investment_Committee_Memorandum.pdf", "label": "Conditional Investment Committee Memorandum", "kind": "PDF", "description": "Conditional, no-price screening memo: seek data before price." },
+  { "file": "Transaction_Execution_Playbook.pdf", "label": "Transaction Execution Playbook", "kind": "PDF", "description": "Owner qualification, nonbinding LOI framework, diligence and integration (simulation)." },
+  { "file": "Fortress_Illustrative_Acquisition_Underwriting.xlsx", "label": "Formula-Driven Underwriting Excel Model", "kind": "XLSX", "description": "Financial source of truth: 291 formulas, three cases, 5x5 sensitivity, model checks." },
+  { "file": "screening_pipeline_30.csv", "label": "Company Screening Pipeline CSV", "kind": "CSV", "description": "30 public-information research leads with ratings and source URLs." },
+  { "file": "evidence_register.csv", "label": "Evidence Register CSV", "kind": "CSV", "description": "First-party citations, verification status and seller-intent labels." }
+]
