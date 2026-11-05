@@ -85,10 +85,17 @@ test.describe("navigation and content", () => {
     await expect(page.locator(".kpi", { hasText: "Researched companies" }).locator(".value")).toHaveText(
       "30",
     );
-    await expect(page.locator(".kpi", { hasText: "Contacted" }).locator(".value")).toHaveText("0");
-    await expect(page.getByRole("heading", { name: "Investment thesis" })).toBeVisible();
+    await expect(
+      page.locator(".kpi", { hasText: "Immediate outreach shortlist" }).locator(".value"),
+    ).toHaveText("0");
+    await expect(page.getByRole("heading", { name: "Decision summary" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Public owner-stance findings" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Verification gaps" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Next-diligence priorities" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Important investment risks" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Woods Comfort Systems" })).toBeVisible();
+    await expect(page.getByText("Illustrative underwriting, not company-specific financials")).toBeVisible();
+    await expect(page.locator("main")).not.toContainText("20 of 30");
+    await expect(page.locator("#h-stance ~ ul li")).toHaveCount(2);
     await expect(page.locator("tbody tr").filter({ hasText: "25.12%" })).toHaveCount(1); // base IRR, computed
   });
 });
@@ -117,7 +124,7 @@ test.describe("pipeline", () => {
     await page.goto("/pipeline");
     const heads = page.locator('[data-testid="pipeline-table"] thead th button');
     const count = await heads.count();
-    expect(count).toBe(11);
+    expect(count).toBe(13);
     for (let i = 0; i < count; i++) {
       await heads.nth(i).click();
       await expect(
@@ -192,6 +199,43 @@ test.describe("company profiles", () => {
     await expect(page.getByText("Missing diligence information")).toBeVisible();
     await expect(page.getByText("Appropriate next research steps")).toBeVisible();
     await expect(page.locator("main")).not.toContainText(/\$\d/); // no dollar value anywhere on a company page
+  });
+
+  test("stance and outreach status: SALT and Efficient are opposed and excluded; others not assessed", async ({
+    page,
+  }) => {
+    for (const [id, url] of [
+      ["FAI-004", "https://callsalt.com/why-salt-stays-privately-owned/"],
+      ["FAI-005", "https://efficienttexas.com/about/"],
+    ]) {
+      await page.goto(`/companies/${id}`);
+      const sec = page.locator("#h-stance").locator("..");
+      await expect(sec).toContainText("Publicly opposed to sale or outside investment");
+      await expect(sec).toContainText("Excluded: publicly opposed");
+      await expect(sec).toContainText("accessed 2026-11-04");
+      await expect(sec).toContainText("not independently verified");
+      await expect(sec.locator(`a[href="${url}"]`).first()).toHaveAttribute("rel", /noopener/);
+    }
+    await page.goto("/companies/FAI-001");
+    await expect(page.locator("#h-stance").locator("..")).toContainText("Not yet assessed");
+    await expect(page.locator("#h-stance").locator("..")).toContainText("Readiness not established");
+  });
+
+  test("pipeline stance/outreach filters and export columns", async ({ page }) => {
+    await page.goto("/pipeline?stance=OPPOSED");
+    const rows = page.locator('[data-testid="pipeline-table"] tbody tr');
+    await expect(rows).toHaveCount(2);
+    await page.goto("/pipeline?outreach=SHORTLIST");
+    await expect(page.getByTestId("result-count")).toContainText("Showing 0 of 30");
+    await page.goto("/pipeline?outreach=EXCLUDED");
+    const [dl] = await Promise.all([page.waitForEvent("download"), page.getByTestId("export-csv").click()]);
+    const parsed = parseCsv(readFileSync((await dl.path())!, "utf8"));
+    expect(parsed).toHaveLength(2);
+    for (const r of parsed) {
+      expect(r["public_owner_stance"]).toBe("Publicly opposed to sale or outside investment");
+      expect(r["outreach_status"]).toMatch(/^Excluded/);
+      expect(r["owner_stance_source_url"]).toMatch(/^https:\/\//);
+    }
   });
 
   test("all 30 profile pages load with a primary source link", async ({ page }) => {

@@ -54,6 +54,25 @@ export const Manifest = z.object({
   compliance: z.string(),
 });
 
+/** Public owner stance toward a sale or outside investment. Distinct from strategic fit (the research score). */
+export const STANCES = ["OPPOSED", "OPEN", "NO_POSITION", "NEEDS_VERIFICATION", "NOT_ASSESSED"] as const;
+export type Stance = (typeof STANCES)[number];
+
+/** Analyst-supplied finding. Always a company self-report; can never be marked independently verified. */
+export const Finding = z
+  .object({
+    companyId: z.string().regex(/^FAI-\d{3}$/),
+    stance: z.enum(["OPPOSED", "OPEN", "NO_POSITION", "NEEDS_VERIFICATION"]),
+    statement: z.string().min(10),
+    sourceUrl: httpsUrl,
+    accessedDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    provenance: z.literal("company_self_reported"),
+    independentlyVerified: z.literal(false),
+  })
+  .strict();
+export const FindingsFile = z.object({ source: z.string().min(1), findings: z.array(Finding) }).strict();
+export type FindingRecord = z.infer<typeof Finding>;
+
 export type Ratings = {
   recurring: number;
   residential: number;
@@ -89,4 +108,7 @@ export interface Company {
   ratings: Ratings;
   note: string;
   evidence: Evidence;
+  /** NOT_ASSESSED unless an analyst-supplied finding exists for this company. No stance is ever inferred. */
+  stance: Stance;
+  stanceFinding: FindingRecord | null;
 }

@@ -12,8 +12,9 @@ The research asks: which Texas residential home-services operators merit further
 
 ## 2. Acquisition sourcing capabilities
 
-- **Pipeline workspace** for 30 researched companies: full-text search; market, service, business-mix, research-priority and source-confidence filters; sortable columns; filter state saved in the URL; CSV export of the current view.
+- **Pipeline workspace** for 30 researched companies: full-text search; market, service, business-mix, strategic-fit, public-owner-stance, outreach-status and source-confidence filters; sortable columns; filter state saved in the URL; CSV export of the current view.
 - **Transparent ranking.** `score = recurring×0.20 + residential×0.30 + austin×0.20 + owner×0.15 + source confidence×0.15`. Ratings are analyst judgments (1–5); weights are editable (two decimals, must total exactly 100.00%) and re-rank live. Ties share a rank. A score never implies seller willingness, price attractiveness or likelihood of a transaction.
+- **Strategic fit vs transaction readiness.** The score above is strategic fit only and is unchanged. A separate _public owner stance_ (Publicly opposed to sale or outside investment / Publicly indicated openness to partnerships / No public position identified / Requires additional verification / Not yet assessed) is recorded only from analyst-supplied, sourced company self-reports (`src/data/analyst-findings.json`): SALT Service Co. and Efficient AC, Electric & Plumbing, both _publicly opposed_, accessed 2026-11-04, not independently verified, not confirmed sellers. Nothing is inferred for the other 28. Publicly opposed companies stay in the 30-company universe with unchanged scores but are excluded from the _immediate outreach shortlist_, which is currently empty because readiness is not established for any company.
 - **Company profiles** (`/companies/FAI-001` … `FAI-030`): sourced description, self-reported leadership and ownership, score build-up, caveats, missing diligence information, next research steps, primary-source link. Financial and transaction fields are shown as _Unknown_.
 
 ## 3. Research database and evidence architecture
@@ -92,4 +93,6 @@ Company information: each company's own website, listed per company in `evidence
 
 ## 12. Disclaimer and license
 
-This is an independent applicant work sample. It is not affiliated with, authorized by, sponsored by, or prepared for Ridgepeak Partners or Fortress Service Partners, and use of those names is only to describe the work sample's context. Nothing here is an offer, a solicitation, a valuation, or investment advice. No open-source license has been granted; all rights are reserved by the author unless a license file is added.
+This is an independent applicant work sample. It is not affiliated with, authorized by, sponsored by, or prepared for Ridgepeak Partners or Fortress Service Partners, and use of those names is only to describe the work sample's context. Nothing here is an offer, a solicitation, a valuation, or investment advice.
+
+**License scope.** The original application code (`src/`, `scripts/`, `tests/`, configuration and this README) is released under the [MIT License](LICENSE). The MIT license does **not** cover the `Ridgepeak_Fortress_Research/` research files, PDFs and Excel workbook, research-derived data in `src/data/` (including `analyst-findings.json`), or third-party materials, names and trademarks. See [NOTICE.md](NOTICE.md) for the exact boundaries.

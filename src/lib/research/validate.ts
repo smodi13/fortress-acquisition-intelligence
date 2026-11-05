@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { EvidenceRow, PipelineRow, metroOf, type Company } from "./schema";
+import { EvidenceRow, Finding, PipelineRow, metroOf, type Company, type FindingRecord } from "./schema";
 
 export const EXPECTED_COMPANIES = 30;
 
@@ -7,7 +7,14 @@ export const EXPECTED_COMPANIES = 30;
 export function normalize(
   pipelineRaw: Record<string, string>[],
   evidenceRaw: Record<string, string>[],
+  findingsRaw: unknown[] = [],
 ): Company[] {
+  const findings: FindingRecord[] = z.array(Finding).parse(findingsRaw);
+  const byId = new Map<string, FindingRecord>();
+  for (const f of findings) {
+    if (byId.has(f.companyId)) throw new Error(`${f.companyId}: duplicate analyst finding`);
+    byId.set(f.companyId, f);
+  }
   const rows = z.array(PipelineRow).parse(pipelineRaw);
   const ev = z.array(EvidenceRow).parse(evidenceRaw);
   return rows.map((r) => {
@@ -33,6 +40,8 @@ export function normalize(
       },
       note: r.screening_note,
       evidence: e,
+      stance: byId.get(r.id)?.stance ?? "NOT_ASSESSED",
+      stanceFinding: byId.get(r.id) ?? null,
     };
   });
 }
@@ -71,6 +80,11 @@ export function integrityErrors(companies: Company[], evidenceRaw: Record<string
   if (evidenceRaw.length !== companies.length)
     errs.push(`evidence rows (${evidenceRaw.length}) != companies (${companies.length})`);
   for (const c of companies) {
+    if (c.stanceFinding) {
+      const host = (u: string) => new URL(u).hostname.replace(/^www\./, "");
+      if (host(c.stanceFinding.sourceUrl) !== host(c.sourceUrl))
+        errs.push(`${c.id}: stance source must be on the company's own domain`);
+    }
     if (c.evidence.source_url !== c.sourceUrl)
       errs.push(`${c.id}: evidence URL differs from primary_source_url`);
     if (c.evidence.evidence_id !== `EV-${c.id}`) errs.push(`${c.id}: evidence id mismatch`);

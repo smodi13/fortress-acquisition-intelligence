@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Tag } from "@/components/ui";
 import { dataFlags } from "@/lib/research/flags";
 import { toCsv } from "@/lib/research/csv";
-import { METROS, type Company } from "@/lib/research/schema";
+import { METROS, STANCES, type Company } from "@/lib/research/schema";
 import {
   WEIGHT_KEYS,
   WEIGHT_LABELS,
@@ -21,8 +21,15 @@ import {
   type WeightState,
 } from "@/lib/research/score";
 import { parseDisplay, toDisplayText } from "@/lib/finance/inputs";
+import { OUTREACH_LABEL, STANCE_LABEL, outreachOf, type OutreachStatus } from "@/lib/research/stance";
 
-type Row = Company & { score: number; label: ResearchLabel; rank: number; flags: number };
+type Row = Company & {
+  score: number;
+  label: ResearchLabel;
+  rank: number;
+  flags: number;
+  outreach: OutreachStatus;
+};
 type SortKey =
   | "rank"
   | "name"
@@ -34,7 +41,10 @@ type SortKey =
   | "label"
   | "owner"
   | "conf"
-  | "flags";
+  | "flags"
+  | "stance"
+  | "outreach";
+const OUTREACH_ORDER: OutreachStatus[] = ["SHORTLIST", "NOT_ESTABLISHED", "EXCLUDED"];
 const LABEL_ORDER: Record<ResearchLabel, number> = { "High research": 0, "Medium research": 1, Watchlist: 2 };
 
 const COLS: { key: SortKey; head: string; num?: boolean; get: (r: Row) => string | number }[] = [
@@ -45,7 +55,9 @@ const COLS: { key: SortKey; head: string; num?: boolean; get: (r: Row) => string
   { key: "mix", head: "Mix (self-reported)", get: (r) => r.businessMix.toLowerCase() },
   { key: "founded", head: "Founded", num: true, get: (r) => r.foundedYear ?? Number.POSITIVE_INFINITY },
   { key: "score", head: "Score", num: true, get: (r) => r.score },
-  { key: "label", head: "Research priority", get: (r) => LABEL_ORDER[r.label] },
+  { key: "label", head: "Strategic fit", get: (r) => LABEL_ORDER[r.label] },
+  { key: "stance", head: "Public owner stance", get: (r) => STANCES.indexOf(r.stance) },
+  { key: "outreach", head: "Outreach status", get: (r) => OUTREACH_ORDER.indexOf(r.outreach) },
   { key: "owner", head: "Owner evidence (1–5)", num: true, get: (r) => r.ratings.owner },
   { key: "conf", head: "Source confidence (1–5)", num: true, get: (r) => r.ratings.sourceConfidence },
   { key: "flags", head: "Open data flags", num: true, get: (r) => r.flags },
@@ -79,6 +91,8 @@ export function PipelineClient({ companies }: { companies: Company[] }) {
   const services = list(sp, "service");
   const mix = sp.get("mix") ?? "";
   const lab = sp.get("label") ?? "";
+  const stanceF = sp.get("stance") ?? "";
+  const outF = sp.get("outreach") ?? "";
   const conf = sp.get("conf") ?? "";
 
   const setParams = (mut: (u: URLSearchParams) => void) => {
@@ -107,7 +121,10 @@ export function PipelineClient({ companies }: { companies: Company[] }) {
       score: score(c.ratings, weights),
       flags: dataFlags(c).length,
     }));
-    return rankAll(scored).map((r) => ({ ...r, label: labelOf(r.score) }));
+    return rankAll(scored).map((r) => {
+      const label = labelOf(r.score);
+      return { ...r, label, outreach: outreachOf(r.stance, label) };
+    });
   }, [companies, weights]);
 
   const allServices = useMemo(() => [...new Set(companies.flatMap((c) => c.services))].sort(), [companies]);
@@ -121,6 +138,8 @@ export function PipelineClient({ companies }: { companies: Company[] }) {
     const fs = p.getAll("service");
     const fmix = p.get("mix") ?? "";
     const flab = p.get("label") ?? "";
+    const fstance = p.get("stance") ?? "";
+    const fout = p.get("outreach") ?? "";
     const fconf = p.get("conf") ?? "";
     const skey = (p.get("sort") as SortKey | null) ?? "rank";
     const sdir = p.get("dir") === "desc" ? "desc" : "asc";
@@ -136,6 +155,8 @@ export function PipelineClient({ companies }: { companies: Company[] }) {
         (!fs.length || fs.every((s) => r.services.includes(s))) &&
         (!fmix || r.businessMix === fmix) &&
         (!flab || r.label === flab) &&
+        (!fstance || r.stance === fstance) &&
+        (!fout || r.outreach === fout) &&
         (!fconf || r.ratings.sourceConfidence >= Number(fconf)),
     );
     f.sort((a, b) => {
@@ -159,7 +180,7 @@ export function PipelineClient({ companies }: { companies: Company[] }) {
       u.set("sort", k);
       u.set("dir", sort === k && dir === "asc" ? "desc" : "asc");
     });
-  const filtered = Boolean(q0 || metros.length || services.length || mix || lab || conf);
+  const filtered = Boolean(q0 || metros.length || services.length || mix || lab || conf || stanceF || outF);
 
   const exportCsv = () => {
     const header = [
@@ -180,7 +201,10 @@ export function PipelineClient({ companies }: { companies: Company[] }) {
       "source_confidence_1_5",
       "research_score",
       "research_rank",
-      "research_priority",
+      "strategic_fit_research_priority",
+      "public_owner_stance",
+      "owner_stance_source_url",
+      "outreach_status",
       "seller_engagement",
       "verified_financials",
       "license_verification",
@@ -205,6 +229,9 @@ export function PipelineClient({ companies }: { companies: Company[] }) {
       r.score.toFixed(4),
       String(r.rank),
       r.label,
+      STANCE_LABEL[r.stance],
+      r.stanceFinding?.sourceUrl ?? "",
+      OUTREACH_LABEL[r.outreach],
       "NOT CONTACTED",
       "NOT VERIFIED",
       "PENDING",
@@ -244,11 +271,33 @@ export function PipelineClient({ companies }: { companies: Company[] }) {
             </select>
           </label>
           <label>
-            Research priority
+            Strategic fit
             <select value={lab} onChange={(e) => setOne("label", e.target.value)} className="plain">
               <option value="">All</option>
               {(["High research", "Medium research", "Watchlist"] as const).map((l) => (
                 <option key={l}>{l}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Public owner stance
+            <select value={stanceF} onChange={(e) => setOne("stance", e.target.value)} className="plain">
+              <option value="">All</option>
+              {STANCES.map((st) => (
+                <option key={st} value={st}>
+                  {STANCE_LABEL[st]}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Outreach status
+            <select value={outF} onChange={(e) => setOne("outreach", e.target.value)} className="plain">
+              <option value="">All</option>
+              {OUTREACH_ORDER.map((o) => (
+                <option key={o} value={o}>
+                  {OUTREACH_LABEL[o]}
+                </option>
               ))}
             </select>
           </label>
@@ -431,6 +480,26 @@ export function PipelineClient({ companies }: { companies: Company[] }) {
                     className={`pill ${r.label === "High research" ? "high" : r.label === "Medium research" ? "med" : "watch"}`}
                   >
                     {r.label}
+                  </span>
+                </td>
+                <td>
+                  <span className={`pill ${r.stance === "OPPOSED" ? "bad" : "watch"}`}>
+                    {STANCE_LABEL[r.stance]}
+                  </span>
+                  {r.stanceFinding && (
+                    <div className="src">
+                      Company self-report,{" "}
+                      <a href={r.stanceFinding.sourceUrl} target="_blank" rel="noopener noreferrer">
+                        source<span className="sr-only"> (opens in a new tab)</span>
+                      </a>
+                    </div>
+                  )}
+                </td>
+                <td>
+                  <span
+                    className={`pill ${r.outreach === "EXCLUDED" ? "bad" : r.outreach === "SHORTLIST" ? "good" : "watch"}`}
+                  >
+                    {OUTREACH_LABEL[r.outreach]}
                   </span>
                 </td>
                 <td className="num">{r.ratings.owner}</td>

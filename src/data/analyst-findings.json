@@ -1,0 +1,23 @@
+{
+  "source": "Analyst-supplied findings from an independent analyst's review of public company statements. Entered into this application on 2026-11-04. Not part of the original research CSVs, which are unchanged.",
+  "findings": [
+    {
+      "companyId": "FAI-004",
+      "stance": "OPPOSED",
+      "statement": "SALT reports that it has never taken private equity investment and has no plans to sell.",
+      "sourceUrl": "https://callsalt.com/why-salt-stays-privately-owned/",
+      "accessedDate": "2026-11-04",
+      "provenance": "company_self_reported",
+      "independentlyVerified": false
+    },
+    {
+      "companyId": "FAI-005",
+      "stance": "OPPOSED",
+      "statement": "The owners say they intend to remain locally owned and have no plans to change that.",
+      "sourceUrl": "https://efficienttexas.com/about/",
+      "accessedDate": "2026-11-04",
+      "provenance": "company_self_reported",
+      "independentlyVerified": false
+    }
+  ]
+}

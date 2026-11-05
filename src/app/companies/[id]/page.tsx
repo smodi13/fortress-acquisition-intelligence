@@ -7,6 +7,7 @@ import { loadDataset } from "@/lib/research/load";
 import { WEIGHT_KEYS, WEIGHT_LABELS, defaultWeights, labelOf, score } from "@/lib/research/score";
 import { scoredDefault } from "@/lib/research/summary";
 import { fromStored } from "@/lib/finance/inputs";
+import { OUTREACH_LABEL, STANCE_LABEL, outreachOf } from "@/lib/research/stance";
 
 export const dynamicParams = false;
 export function generateStaticParams() {
@@ -33,6 +34,8 @@ export default async function CompanyPage({ params }: Props) {
   const label = labelOf(s);
   const rank = scoredDefault(companies).find((r) => r.id === c.id)!.rank;
   const flags = dataFlags(c);
+  const outreach = outreachOf(c.stance, label);
+  const sf = c.stanceFinding;
   const prev = companies[idx - 1];
   const next = companies[idx + 1];
   const years = c.foundedYear === null ? null : AS_OF_YEAR - c.foundedYear;
@@ -55,12 +58,12 @@ export default async function CompanyPage({ params }: Props) {
 
       <div className="grid g4">
         <Kpi
-          label="Research score"
+          label="Strategic-fit score"
           value={s.toFixed(2)}
           sub={`of 5.00 · rank ${rank} of ${companies.length}`}
           kind="judg"
         />
-        <Kpi label="Research priority" value={label} sub="Not a view on willingness to sell" kind="judg" />
+        <Kpi label="Strategic fit" value={label} sub="Not a view on willingness to sell" kind="judg" />
         <Kpi
           label="Operating since"
           value={c.foundedYear ?? "Unknown"}
@@ -148,6 +151,42 @@ export default async function CompanyPage({ params }: Props) {
         </section>
       </div>
 
+      <section className="card" aria-labelledby="h-stance" style={{ marginTop: "1rem" }}>
+        <h2 id="h-stance">Ownership stance and transaction readiness</h2>
+        <p>
+          <strong>Public owner stance:</strong>{" "}
+          <span className={`pill ${c.stance === "OPPOSED" ? "bad" : "watch"}`}>{STANCE_LABEL[c.stance]}</span>
+          {"  "}
+          <strong>Outreach status:</strong>{" "}
+          <span
+            className={`pill ${outreach === "EXCLUDED" ? "bad" : outreach === "SHORTLIST" ? "good" : "watch"}`}
+          >
+            {OUTREACH_LABEL[outreach]}
+          </span>
+        </p>
+        {sf ? (
+          <>
+            <p>
+              “{sf.statement}” <Tag kind="self" />
+            </p>
+            <p className="src">
+              Source: <ExtLink href={sf.sourceUrl}>{sf.sourceUrl}</ExtLink> · accessed {sf.accessedDate} ·
+              company self-reported; not independently verified. This is not a confirmed seller or a confirmed
+              non-seller; it is a public statement by the company, kept out of the strategic-fit score.
+            </p>
+          </>
+        ) : (
+          <p className="small muted">
+            No ownership-stance finding has been supplied for this company. Nothing is inferred about
+            transaction receptivity.
+          </p>
+        )}
+        <p className="src">
+          Strategic fit ({label}) and transaction readiness are separate. Publicly opposed companies stay in
+          the research universe with unchanged scores but are excluded from the immediate outreach shortlist.
+        </p>
+      </section>
+
       <section className="card" aria-labelledby="h-fit" style={{ marginTop: "1rem" }}>
         <h2 id="h-fit">
           Research fit assessment <Tag kind="judg" />
@@ -173,7 +212,7 @@ export default async function CompanyPage({ params }: Props) {
                 </tr>
               ))}
               <tr className="total">
-                <th scope="row">Research score</th>
+                <th scope="row">Strategic-fit score</th>
                 <td />
                 <td className="num">100.00%</td>
                 <td className="num">{s.toFixed(2)}</td>

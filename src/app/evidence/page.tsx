@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { Callout, ExtLink, PageHead } from "@/components/ui";
+import { Callout, ExtLink, PageHead, Tag } from "@/components/ui";
+import { STANCE_LABEL } from "@/lib/research/stance";
 import { loadDataset } from "@/lib/research/load";
 import { countBy } from "@/lib/research/summary";
 import { EvidenceClient } from "./EvidenceClient";
@@ -61,6 +62,25 @@ export default function Evidence() {
       </Callout>
 
       <EvidenceClient companies={companies} />
+
+      <section className="card" style={{ marginTop: "1rem" }} aria-labelledby="h-stance">
+        <h2 id="h-stance">Analyst-supplied ownership-stance statements</h2>
+        <p className="small muted">
+          Separate from the evidence register above, which is unchanged. Each is a company self-report
+          <Tag kind="self" />, not independently verified, and not a confirmed seller or non-seller.
+        </p>
+        <ul className="clean">
+          {companies
+            .filter((c) => c.stanceFinding)
+            .map((c) => (
+              <li key={c.id}>
+                <strong>{c.name}</strong> ({c.id}): {STANCE_LABEL[c.stance]}. “{c.stanceFinding!.statement}”{" "}
+                <ExtLink href={c.stanceFinding!.sourceUrl}>{c.stanceFinding!.sourceUrl}</ExtLink>
+                <span className="src"> · accessed {c.stanceFinding!.accessedDate}</span>
+              </li>
+            ))}
+        </ul>
+      </section>
 
       <section className="card" style={{ marginTop: "1rem" }}>
         <h2>Reference sources</h2>

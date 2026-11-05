@@ -7,22 +7,24 @@ import { runModel } from "@/lib/finance/engine";
 import { defaultState, stateToInputs } from "@/lib/finance/inputs";
 import { SCENARIOS } from "@/lib/finance/types";
 import { loadDataset } from "@/lib/research/load";
-import { countBy, metroCounts, scoredDefault } from "@/lib/research/summary";
+import { scoredDefault } from "@/lib/research/summary";
+import { NEXT_RESEARCH_STEPS } from "@/lib/research/flags";
+import { OUTREACH_LABEL, STANCE_LABEL, outreachOf } from "@/lib/research/stance";
 
 export default function Overview() {
   const { companies } = loadDataset();
   const ranked = scoredDefault(companies);
-  const cut = ranked[11]!.score;
-  const top = ranked.filter((r) => Math.round((r.score - cut) * 1e9) >= 0);
-  const metros = metroCounts(companies);
-  const services = countBy(companies, (c) => c.services);
-  const labels = countBy(ranked, (c) => [c.label]);
+  const rows = ranked.map((r) => ({ ...r, outreach: outreachOf(r.stance, r.label) }));
+  const top = rows.slice(0, 12);
+  const findings = companies.filter((c) => c.stanceFinding);
+  const shortlist = rows.filter((r) => r.outreach === "SHORTLIST").length;
+  const excluded = rows.filter((r) => r.outreach === "EXCLUDED").length;
+  const queue = rows.filter((r) => r.outreach !== "EXCLUDED").slice(0, 5);
   const runs = SCENARIOS.map((s) => runModel(stateToInputs(defaultState(), s)));
   const withPrimary = companies.filter((c) => c.sourceUrl.startsWith("https://")).length;
   const firstPartyOnly = companies.filter((c) =>
     /^First-party only/i.test(c.evidence.verification_status),
   ).length;
-  const max = Math.max(...metros.map(([, n]) => n));
 
   return (
     <>
@@ -51,70 +53,37 @@ export default function Overview() {
           sub="Public, first-party sources"
           kind="fact"
         />
-        <Kpi label="Contacted" value={0} sub="No outreach performed" kind="fact" />
+        <Kpi
+          label="Immediate outreach shortlist"
+          value={shortlist}
+          sub={`Readiness not established; ${excluded} publicly opposed, excluded`}
+          kind="judg"
+        />
         <Kpi label="Financials verified" value={0} sub="Revenue and EBITDA unknown for all" kind="unk" />
         <Kpi label="Licenses verified" value={0} sub="TDLR / TSBPE checks pending" kind="unk" />
       </section>
 
-      <div className="grid g2" style={{ marginTop: "1rem" }}>
-        <section className="card" aria-labelledby="h-thesis">
-          <h2 id="h-thesis">Investment thesis</h2>
-          <ul className="clean">
-            {thesis.map((t) => (
-              <li key={t.value}>
-                {t.value}{" "}
-                <span className="src">
-                  ({t.source}, p.{t.page})
-                </span>
-              </li>
-            ))}
-          </ul>
-          <h3 style={{ marginTop: "1rem" }}>Current recommendation</h3>
-          <p>{recommendation.value}</p>
-          <p className="src">
-            {recommendation.source}, p.{recommendation.page}. <Tag kind="judg" /> {decisionSought.value}
-          </p>
-        </section>
-
-        <section className="card" aria-labelledby="h-scope">
-          <h2 id="h-scope">Research scope and market mix</h2>
-          <p className="small muted">
-            Geographic mix of the {companies.length} leads (normalized from the source market field).{" "}
-            <Tag kind="fact" />
-          </p>
-          {metros.map(([m, n]) => (
-            <div key={m} style={{ marginBottom: ".5rem" }}>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span>{m}</span>
-                <strong className="num">{n}</strong>
-              </div>
-              <div className="bar" aria-hidden="true">
-                <i style={{ width: `${(n / max) * 100}%` }} />
-              </div>
-            </div>
-          ))}
-          <h3 style={{ marginTop: "1rem" }}>Service mix (companies offering each trade)</h3>
-          <div className="chips">
-            {services.map(([s, n]) => (
-              <span key={s} className="pill watch">
-                {s} · {n}
-              </span>
-            ))}
-          </div>
-          <p className="small muted" style={{ marginTop: ".75rem" }}>
-            Research priority at default weights: {labels.map(([l, n]) => `${n} ${l}`).join(" · ")}.{" "}
-            <Tag kind="judg" />
-          </p>
-        </section>
-      </div>
+      <section className="card" aria-labelledby="h-decision" style={{ marginTop: "1rem" }}>
+        <h2 id="h-decision">Decision summary</h2>
+        <p>
+          {companies.length} businesses were researched and ranked on <strong>strategic fit</strong>. Fit is
+          not transaction readiness: no company has been contacted or verified as a seller, and{" "}
+          {findings.length} have public statements about ownership (below). Treat the ranking as a
+          qualification queue, not a list of actionable targets.
+        </p>
+        <p className="small muted">
+          {recommendation.value}{" "}
+          <span className="src">
+            ({recommendation.source}, p.{recommendation.page})
+          </span>
+        </p>
+      </section>
 
       <section className="card" aria-labelledby="h-top" style={{ marginTop: "1rem" }}>
-        <h2 id="h-top">Highest-ranked research candidates</h2>
+        <h2 id="h-top">Strategic-fit ranking (top 12 of {companies.length})</h2>
         <p className="small muted">
-          Public-information research score (1–5) from analyst ratings and the weights on the Methodology
-          page. Ties share a rank.{" "}
-          {top.length > 12 &&
-            `The Executive Brief lists 12; ${top.length} companies share scores at or above the 12th-place score.`}
+          Score (1–5) from analyst ratings and the Methodology weights. Ties share a rank. Outreach status is
+          separate from fit.
         </p>
         <div className="tablewrap" tabIndex={0} role="region" aria-label="Top ranked research candidates">
           <table>
@@ -123,9 +92,10 @@ export default function Overview() {
                 <th>Rank</th>
                 <th>Company</th>
                 <th>Market</th>
-                <th>Services</th>
                 <th className="num">Score</th>
-                <th>Research priority</th>
+                <th>Strategic fit</th>
+                <th>Public owner stance</th>
+                <th>Outreach status</th>
               </tr>
             </thead>
             <tbody>
@@ -136,13 +106,18 @@ export default function Overview() {
                     <Link href={`/companies/${c.id}`}>{c.name}</Link>
                   </td>
                   <td>{c.market}</td>
-                  <td>{c.services.join(", ")}</td>
                   <td className="num">{c.score.toFixed(2)}</td>
                   <td>
                     <span
                       className={`pill ${c.label === "High research" ? "high" : c.label === "Medium research" ? "med" : "watch"}`}
                     >
                       {c.label}
+                    </span>
+                  </td>
+                  <td>{STANCE_LABEL[c.stance]}</td>
+                  <td>
+                    <span className={`pill ${c.outreach === "EXCLUDED" ? "bad" : "watch"}`}>
+                      {OUTREACH_LABEL[c.outreach]}
                     </span>
                   </td>
                 </tr>
@@ -153,6 +128,68 @@ export default function Overview() {
         <p style={{ marginTop: ".75rem" }}>
           <Link href="/pipeline">Explore all {companies.length} companies →</Link>
         </p>
+      </section>
+
+      <div className="grid g2" style={{ marginTop: "1rem" }}>
+        <section className="card" aria-labelledby="h-stance">
+          <h2 id="h-stance">Public owner-stance findings</h2>
+          <ul className="clean">
+            {findings.map((c) => (
+              <li key={c.id}>
+                <strong>{c.name}</strong>: {STANCE_LABEL[c.stance]}. <Tag kind="self" />{" "}
+                <a href={c.stanceFinding!.sourceUrl} target="_blank" rel="noopener noreferrer">
+                  source<span className="sr-only"> (opens in a new tab)</span>
+                </a>
+                <span className="src"> · accessed {c.stanceFinding!.accessedDate}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="src">
+            Company self-reports, not independently verified. Excluded from the immediate outreach shortlist;
+            scores unchanged. No stance is inferred for the other {companies.length - findings.length}.
+          </p>
+        </section>
+
+        <section className="card" aria-labelledby="h-gaps">
+          <h2 id="h-gaps">Verification gaps</h2>
+          <ul className="clean">
+            <li>
+              Company financials verified: <strong>0 of {companies.length}</strong>
+            </li>
+            <li>
+              Independent license and ownership checks: <strong>0 of {companies.length}</strong> (first-party
+              only: {firstPartyOnly})
+            </li>
+            <li>
+              Owner stance assessed:{" "}
+              <strong>
+                {findings.length} of {companies.length}
+              </strong>
+            </li>
+            <li>
+              Seller intent: <strong>unknown for all {companies.length}</strong>
+            </li>
+          </ul>
+        </section>
+      </div>
+
+      <section className="card" aria-labelledby="h-next" style={{ marginTop: "1rem" }}>
+        <h2 id="h-next">Next-diligence priorities</h2>
+        <p>
+          First verify ownership and stance for the highest-fit companies not publicly opposed:{" "}
+          {queue.map((q, i) => (
+            <span key={q.id}>
+              {i > 0 && ", "}
+              <Link href={`/companies/${q.id}`}>{q.name}</Link>
+            </span>
+          ))}
+          .
+        </p>
+        <ol>
+          {NEXT_RESEARCH_STEPS.map((n) => (
+            <li key={n}>{n}</li>
+          ))}
+        </ol>
       </section>
 
       <div className="grid g2" style={{ marginTop: "1rem" }}>
@@ -173,7 +210,8 @@ export default function Overview() {
         <section className="card" aria-labelledby="h-case">
           <h2 id="h-case">Illustrative underwriting case summary</h2>
           <Callout kind="warn">
-            Hypothetical $8.00mm-revenue sample acquisition. Not an estimate for any identified company.{" "}
+            <strong>Illustrative underwriting, not company-specific financials.</strong> Hypothetical
+            $8.00mm-revenue sample acquisition; no identified company’s revenue or EBITDA is known.{" "}
             <Tag kind="calc" /> outputs below are calculated live by the engine from workbook assumptions.
           </Callout>
           <div className="tablewrap" tabIndex={0} role="region" aria-label="Data table, scrollable">

@@ -76,7 +76,7 @@ export default function Methodology() {
       </section>
 
       <section className="card" style={{ marginTop: "1rem" }} aria-labelledby="h-score">
-        <h2 id="h-score">Research score</h2>
+        <h2 id="h-score">Strategic-fit score</h2>
         <p>
           <code>
             score = recurring×{fromStored("pct", w.recurring).toFixed(2)} + residential×
@@ -125,6 +125,24 @@ export default function Methodology() {
         <p className="small muted">
           Market normalization: the free-text market field maps deterministically to four metros (Austin /
           Central Texas, San Antonio, Dallas–Fort Worth, Houston) for filtering only.
+        </p>
+      </section>
+
+      <section className="card" style={{ marginTop: "1rem" }} aria-labelledby="h-ready">
+        <h2 id="h-ready">Strategic fit versus transaction readiness</h2>
+        <p>
+          The score above measures <strong>strategic fit</strong> only. <strong>Transaction readiness</strong>{" "}
+          is separate and is not scored. Each company carries a public owner stance: Publicly opposed to sale
+          or outside investment; Publicly indicated openness to partnerships; No public position identified;
+          Requires additional verification; or Not yet assessed. Stances come only from analyst-supplied,
+          sourced, company self-reported statements (currently SALT Service Co. and Efficient AC, Electric &
+          Plumbing); nothing is inferred for any other company.
+        </p>
+        <p>
+          Outreach status: <em>Excluded</em> if publicly opposed; <em>Immediate outreach shortlist</em> only
+          if openness is publicly indicated and the fit is not Watchlist; otherwise{" "}
+          <em>Readiness not established</em>. Excluded companies stay in the research universe with unchanged
+          scores. No company is a confirmed seller.
         </p>
       </section>
 
