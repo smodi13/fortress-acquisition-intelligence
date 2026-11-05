@@ -133,8 +133,11 @@ test.describe("pipeline", () => {
       await expect(rows).toHaveCount(30);
     }
     // score sort descending places 4.85 first
+    const scoreTh = page.locator("thead th", { has: page.getByRole("button", { name: /^Score/ }) });
     await page.getByRole("button", { name: /^Score/ }).click();
+    await expect(scoreTh).toHaveAttribute("aria-sort", "ascending");
     await page.getByRole("button", { name: /^Score/ }).click();
+    await expect(scoreTh).toHaveAttribute("aria-sort", "descending");
     await expect(rows.first()).toContainText("4.85");
 
     // CSV export is valid and matches the dataset and filter
