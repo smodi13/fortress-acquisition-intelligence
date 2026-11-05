@@ -66,7 +66,7 @@ The LibreOffice differential test runs only if LibreOffice is installed (`soffic
 
 ## Deployment
 
-The app is a static Next.js build with no environment variables or secrets. Deploy with the Vercel CLI (`vercel deploy --prod`) or by importing the repository in Vercel (framework: Next.js, production branch: `main`). The build copies the six supplied downloads byte for byte from `Ridgepeak_Fortress_Research/` and fails on any hash mismatch.
+The app is a static Next.js build with no environment variables or secrets. Deploy with the Vercel CLI (`vercel deploy --prod`) or by importing the repository in Vercel (framework: Next.js, production branch: `main`). The Vercel project is linked to this GitHub repository, so pushes to `main` deploy to production automatically. The build copies the six supplied downloads byte for byte from `Ridgepeak_Fortress_Research/` and fails on any hash mismatch.
 
 ## Limitations
 
